@@ -42,6 +42,10 @@ FROM php:8.3-apache
 #              without this extension raises a fatal "Call to undefined
 #              function mb_strlen()" on registration, on checkout and on the
 #              Admin product/category forms.
+#              The mbstring extension is built against oniguruma, so
+#              libonig-dev is REQUIRED for the build to succeed at all. The
+#              extension configure step fails with "Package 'oniguruma' not
+#              found" when it is missing.
 # - zip      : used by the backup tooling.
 # - openssl  : needed by the backup encryption.
 # - mysql-client : mysqldump, used by the backup job (NFR-R-03).
@@ -52,6 +56,7 @@ RUN set -eux; \
         libpng-dev \
         libjpeg-dev \
         libfreetype6-dev \
+        libonig-dev \
         zlib1g-dev \
         unzip \
         default-mysql-client \
