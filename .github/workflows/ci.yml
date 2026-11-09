@@ -216,6 +216,21 @@ jobs:
             "GRANT ALL PRIVILEGES ON greencorner.* TO 'greencorner'@'%'; FLUSH PRIVILEGES;"
           echo "The schema is applied."
 
+      - name: Apply the migrations
+        env:
+          MYSQL_PWD: ci-root-password
+        run: |
+          set -euo pipefail
+          # The base schema carries the wallet tables, but a migration that is
+          # added later would otherwise never run in CI, and the pipeline
+          # would test a database shape that no deployment has. Applying the
+          # migrations here means CI always exercises the current schema.
+          for file in database/migrations/*.sql; do
+            echo "Applying $file"
+            mysql -h 127.0.0.1 -uroot greencorner < "$file"
+          done
+          echo "The migrations are applied."
+
       - name: Write the local configuration
         run: |
           set -euo pipefail
@@ -314,6 +329,21 @@ jobs:
           mysql -h 127.0.0.1 -uroot < database/schema.sql
           mysql -h 127.0.0.1 -uroot -e \
             "GRANT ALL PRIVILEGES ON greencorner.* TO 'greencorner'@'%'; FLUSH PRIVILEGES;"
+
+      - name: Apply the migrations
+        env:
+          MYSQL_PWD: ci-root-password
+        run: |
+          set -euo pipefail
+          # The base schema carries the wallet tables, but a migration that is
+          # added later would otherwise never run in CI, and the pipeline
+          # would test a database shape that no deployment has. Applying the
+          # migrations here means CI always exercises the current schema.
+          for file in database/migrations/*.sql; do
+            echo "Applying $file"
+            mysql -h 127.0.0.1 -uroot greencorner < "$file"
+          done
+          echo "The migrations are applied."
 
       - name: Write the local configuration
         run: |

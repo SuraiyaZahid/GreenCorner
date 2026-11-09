@@ -200,6 +200,47 @@ $runner->test('The workflow applies the schema and seeds the sample data', funct
     assert_contains('database/seed.php', $content);
 });
 
+$runner->test('The workflow applies the migrations as well as the schema', function () use ($workflowPath) {
+    $content = (string) file_get_contents($workflowPath);
+
+    // A migration that is added later would otherwise never run in CI, and
+    // the pipeline would test a database shape that no deployment has.
+    assert_contains('database/migrations/*.sql', $content);
+});
+
+$runner->test('The base schema carries every table the application queries', function () use ($root) {
+    $schema = (string) file_get_contents($root . '/database/schema.sql');
+
+    // A fresh installation is created from database/schema.sql alone. If a
+    // table the application reads is missing from it, the first request that
+    // reads that table fails. The wallet tables are the case that happened:
+    // the Admin order pages read payment_ref and refunds for every order,
+    // and the CI database had neither, so the Admin order detail page
+    // answered with a server error instead of the order.
+    foreach (array('payment_ref', 'refunds') as $table) {
+        assert_contains(
+            'CREATE TABLE `' . $table . '`',
+            $schema,
+            'The base schema does not create the ' . $table . ' table'
+        );
+    }
+
+    // The wallet methods and statuses must be in the base enums too, or a
+    // customer cannot pay by wallet on a fresh installation.
+    assert_contains("'bkash'", $schema, 'The base schema does not admit the bkash payment method');
+    assert_contains("'nagad'", $schema, 'The base schema does not admit the nagad payment method');
+    assert_contains(
+        "'pending_verification'",
+        $schema,
+        'The base schema does not admit the pending_verification payment status'
+    );
+    assert_contains(
+        "'paid_unfulfillable'",
+        $schema,
+        'The base schema does not admit the paid_unfulfillable order status'
+    );
+});
+
 $runner->test('The workflow starts the server with the router script', function () use ($workflowPath) {
     $content = (string) file_get_contents($workflowPath);
 

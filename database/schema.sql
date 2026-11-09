@@ -38,11 +38,14 @@ USE `greencorner`;
 -- Drop in reverse dependency order so the script is re-runnable during
 -- development. Production deployments should NOT run this section.
 SET FOREIGN_KEY_CHECKS = 0;
+DROP TABLE IF EXISTS `refunds`;
+DROP TABLE IF EXISTS `payment_ref`;
 DROP TABLE IF EXISTS `payments`;
 DROP TABLE IF EXISTS `order_items`;
 DROP TABLE IF EXISTS `orders`;
 DROP TABLE IF EXISTS `cart_items`;
 DROP TABLE IF EXISTS `login_attempts`;
+DROP TABLE IF EXISTS `order_sequence`;
 DROP TABLE IF EXISTS `products`;
 DROP TABLE IF EXISTS `categories`;
 DROP TABLE IF EXISTS `users`;
@@ -168,7 +171,7 @@ CREATE TABLE `orders` (
   `order_number`    VARCHAR(32)   NOT NULL,
   `user_id`         INT UNSIGNED  NOT NULL,
   `total_amount`    DECIMAL(10,2) NOT NULL,
-  `status`          ENUM('placed','processing','shipped','delivered','cancelled')
+  `status`          ENUM('placed','processing','shipped','delivered','cancelled','paid_unfulfillable')
                     NOT NULL DEFAULT 'placed',
   `delivery_name`    VARCHAR(120) NOT NULL,
   `delivery_phone`   VARCHAR(40)  NOT NULL,
@@ -216,13 +219,20 @@ CREATE TABLE `order_items` (
 --   order_id          NULL — a declined card attempt references no order
 --   success_order_id  VIRTUAL GENERATED — equals order_id when status='success'
 --   uq_payments_success_order — at most one successful payment per order
---   chk_payment_order_binding — the five permitted shapes (BR-8)
+--   chk_payment_order_binding — the permitted shapes (BR-8, FR-4.7)
+--
+-- The bKash and Nagad methods are part of the base schema, not an optional
+-- extension. The Admin order pages read the wallet submission and the
+-- refunds of every payment, so a database created from this file without
+-- them would fail on the first order page. The migration file
+-- database/migrations/004_wallet_payments.sql carries the same change for
+-- an installation that predates it.
 -- ---------------------------------------------------------------------------
 CREATE TABLE `payments` (
   id            INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   order_id      INT UNSIGNED NULL,          -- NULL for failed card attempts
-  method        ENUM('card','cod')          NOT NULL,
-  status        ENUM('pending','success','failed') NOT NULL,
+  method        ENUM('card','cod','bkash','nagad') NOT NULL,
+  status        ENUM('pending','success','failed','pending_verification') NOT NULL,
   paid_at       DATETIME NULL,
   success_order_id INT UNSIGNED
     GENERATED ALWAYS AS (
@@ -236,10 +246,92 @@ CREATE TABLE `payments` (
       OR (method = 'cod'   AND status = 'pending'  AND order_id IS NOT NULL)
       OR (method = 'cod'   AND status = 'success'  AND order_id IS NOT NULL)
       OR (method = 'cod'   AND status = 'failed'   AND order_id IS NOT NULL)
+      OR (method IN ('bkash','nagad') AND status = 'pending_verification' AND order_id IS NOT NULL)
+      OR (method IN ('bkash','nagad') AND status = 'success'              AND order_id IS NOT NULL)
+      OR (method IN ('bkash','nagad') AND status = 'failed'               AND order_id IS NOT NULL)
     ),
   CONSTRAINT fk_payments_order
     FOREIGN KEY (order_id) REFERENCES orders (id)
     ON DELETE RESTRICT ON UPDATE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ---------------------------------------------------------------------------
+-- payment_ref
+-- One row per customer submission of a bKash or Nagad payment (FR-4.7).
+--
+--   transaction_id  UNIQUE — the same transaction id can never be submitted
+--                    twice, across every customer and every order. The
+--                    uniqueness is enforced by the database, not only by the
+--                    application, so a concurrent submission cannot slip
+--                    through a check-then-insert race.
+--   status          pending_verification | verified | rejected
+--   verified_by     the Admin who verified or rejected it
+--   reference_code  the reference the customer was shown, so the store can
+--                    match the payment against the wallet statement
+--   amount          the amount the customer was told to send, captured at
+--                    the time of submission so a later price change cannot
+--                    rewrite history
+--
+-- A submitted transaction id is NOT proof of payment. A row stays at
+-- 'pending_verification' until an Admin has checked it against the wallet
+-- statement.
+-- ---------------------------------------------------------------------------
+CREATE TABLE `payment_ref` (
+  `id`              INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `payment_id`      INT UNSIGNED NOT NULL,
+  `method`          ENUM('bkash','nagad') NOT NULL,
+  `sender_number`   VARCHAR(20)  NOT NULL,
+  `transaction_id`  VARCHAR(64)  NOT NULL,
+  `amount`          DECIMAL(10,2) NOT NULL,
+  `reference_code`  VARCHAR(64)  NOT NULL,
+  `status`          ENUM('pending_verification','verified','rejected') NOT NULL DEFAULT 'pending_verification',
+  `verified_by`     INT UNSIGNED NULL,
+  `verified_at`     DATETIME     NULL,
+  `rejection_reason` VARCHAR(255) NULL,
+  `created_at`      DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_payment_ref_transaction_id` (`transaction_id`),
+  KEY `idx_payment_ref_payment_id` (`payment_id`),
+  KEY `idx_payment_ref_status` (`status`),
+  KEY `idx_payment_ref_verified_by` (`verified_by`),
+  CONSTRAINT `chk_payment_ref_amount` CHECK (`amount` >= 0),
+  CONSTRAINT `fk_payment_ref_payment`
+    FOREIGN KEY (`payment_id`) REFERENCES `payments` (`id`)
+    ON DELETE CASCADE ON UPDATE RESTRICT,
+  CONSTRAINT `fk_payment_ref_verified_by`
+    FOREIGN KEY (`verified_by`) REFERENCES `users` (`id`)
+    ON DELETE SET NULL ON UPDATE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ---------------------------------------------------------------------------
+-- refunds
+-- The refund record (FR-4.16).
+--
+--   status  refund_pending | refunded | refund_failed
+--
+-- A refund is created as `refund_pending`. It becomes `refunded` ONLY
+-- after the gateway confirms it. A failed refund becomes `refund_failed`,
+-- which flags the case for Admin review. There is no code path that sets
+-- `refunded` without a confirmation.
+-- ---------------------------------------------------------------------------
+CREATE TABLE `refunds` (
+  `id`                INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `payment_id`        INT UNSIGNED NOT NULL,
+  `amount`            DECIMAL(10,2) NOT NULL,
+  `status`            ENUM('refund_pending','refunded','refund_failed') NOT NULL DEFAULT 'refund_pending',
+  `reason`            VARCHAR(255) NOT NULL,
+  `gateway_reference` VARCHAR(190) NULL,
+  `failure_detail`    VARCHAR(255) NULL,
+  `confirmed_at`      DATETIME     NULL,
+  `created_at`        DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at`        DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_refunds_payment_id` (`payment_id`),
+  KEY `idx_refunds_status` (`status`),
+  CONSTRAINT `chk_refunds_amount` CHECK (`amount` > 0),
+  CONSTRAINT `fk_refunds_payment`
+    FOREIGN KEY (`payment_id`) REFERENCES `payments` (`id`)
+    ON DELETE CASCADE ON UPDATE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ---------------------------------------------------------------------------
