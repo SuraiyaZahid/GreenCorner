@@ -32,3 +32,6 @@ Thumbs.db
 # Logs and temporary files.
 *.log
 *.tmp
+
+# A stray scratch file left behind by an ad-hoc MySQL session.
+query
