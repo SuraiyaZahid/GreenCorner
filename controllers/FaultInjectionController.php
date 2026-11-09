@@ -27,10 +27,10 @@
  * never touch a row.
  */
 
-require_once __DIR__ . '/../helpers/functions.php';
-require_once __DIR__ . '/../helpers/authorization.php';
-require_once __DIR__ . '/../helpers/db.php';
-require_once __DIR__ . '/../helpers/session_handler.php';
+require_once dirname(__DIR__) . '/helpers/functions.php';
+require_once dirname(__DIR__) . '/helpers/authorization.php';
+require_once dirname(__DIR__) . '/helpers/db.php';
+require_once dirname(__DIR__) . '/helpers/session_handler.php';
 
 class FaultInjectionController
 {

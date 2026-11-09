@@ -7,7 +7,7 @@
  *   count excludes soft-deleted products.
  */
 
-require_once __DIR__ . '/../../helpers/functions.php';
+require_once dirname(__DIR__, 2) . '/helpers/functions.php';
 
 $pageTitle = 'Admin dashboard';
 $adminSection = 'dashboard';

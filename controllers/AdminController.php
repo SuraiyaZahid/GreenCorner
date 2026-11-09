@@ -18,13 +18,13 @@
  * change is protected by a CSRF check (FR-7.7).
  */
 
-require_once __DIR__ . '/../helpers/functions.php';
-require_once __DIR__ . '/../helpers/authorization.php';
-require_once __DIR__ . '/../helpers/csrf.php';
-require_once __DIR__ . '/../helpers/image.php';
-require_once __DIR__ . '/../models/ProductAdmin.php';
-require_once __DIR__ . '/../models/Category.php';
-require_once __DIR__ . '/../models/Product.php';
+require_once dirname(__DIR__) . '/helpers/functions.php';
+require_once dirname(__DIR__) . '/helpers/authorization.php';
+require_once dirname(__DIR__) . '/helpers/csrf.php';
+require_once dirname(__DIR__) . '/helpers/image.php';
+require_once dirname(__DIR__) . '/models/ProductAdmin.php';
+require_once dirname(__DIR__) . '/models/Category.php';
+require_once dirname(__DIR__) . '/models/Product.php';
 
 class AdminController
 {

@@ -17,11 +17,11 @@
  *   FR-3.4  a visitor's pending Add-to-Cart is resumed after login
  */
 
-require_once __DIR__ . '/../helpers/functions.php';
-require_once __DIR__ . '/../helpers/csrf.php';
-require_once __DIR__ . '/../helpers/authorization.php';
-require_once __DIR__ . '/../models/User.php';
-require_once __DIR__ . '/../models/LoginAttempt.php';
+require_once dirname(__DIR__) . '/helpers/functions.php';
+require_once dirname(__DIR__) . '/helpers/csrf.php';
+require_once dirname(__DIR__) . '/helpers/authorization.php';
+require_once dirname(__DIR__) . '/models/User.php';
+require_once dirname(__DIR__) . '/models/LoginAttempt.php';
 
 class AuthController
 {
@@ -354,7 +354,7 @@ class AuthController
             return null;
         }
 
-        require_once __DIR__ . '/../models/Product.php';
+        require_once dirname(__DIR__) . '/models/Product.php';
 
         $product = Product::findActiveById($productId);
         if ($product === null) {

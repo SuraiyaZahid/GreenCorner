@@ -20,8 +20,8 @@
  *   php tests/phase8_cleanup.php
  */
 
-require_once __DIR__ . '/../config/bootstrap.php';
-require_once __DIR__ . '/../helpers/db.php';
+require_once dirname(__DIR__) . '/config/bootstrap.php';
+require_once dirname(__DIR__) . '/helpers/db.php';
 
 // ---------------------------------------------------------------------------
 // The catalogue: everything the seed script does not define is a leftover.

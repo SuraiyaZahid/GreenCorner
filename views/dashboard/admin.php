@@ -6,7 +6,7 @@
  * are built in Phase 6.
  */
 
-require_once __DIR__ . '/../../helpers/functions.php';
+require_once dirname(__DIR__, 2) . '/helpers/functions.php';
 
 $pageTitle = 'Admin dashboard';
 

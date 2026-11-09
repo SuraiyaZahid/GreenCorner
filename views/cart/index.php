@@ -20,9 +20,9 @@
  *   $blocked  array<int, array<string, mixed>>  The unavailable lines.
  */
 
-require_once __DIR__ . '/../../helpers/functions.php';
-require_once __DIR__ . '/../../helpers/image.php';
-require_once __DIR__ . '/../../helpers/csrf.php';
+require_once dirname(__DIR__, 2) . '/helpers/functions.php';
+require_once dirname(__DIR__, 2) . '/helpers/image.php';
+require_once dirname(__DIR__, 2) . '/helpers/csrf.php';
 
 $pageTitle = 'Your cart';
 $isEmpty = $items === array();

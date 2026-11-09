@@ -15,7 +15,7 @@
  *   $user      array<string, mixed>  The signed-in account.
  */
 
-require_once __DIR__ . '/../../helpers/functions.php';
+require_once dirname(__DIR__, 2) . '/helpers/functions.php';
 
 $pageTitle = 'Your dashboard';
 

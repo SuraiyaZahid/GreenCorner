@@ -9,7 +9,7 @@
  * No stack trace, SQL fragment or file path is disclosed.
  */
 
-require_once __DIR__ . '/../../helpers/functions.php';
+require_once dirname(__DIR__, 2) . '/helpers/functions.php';
 
 $pageTitle = $pageTitle ?? 'Page not found';
 

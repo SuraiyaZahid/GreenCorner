@@ -23,11 +23,11 @@
  *   7.  Infrastructure
  */
 
-require_once __DIR__ . '/../config/bootstrap.php';
+require_once dirname(__DIR__) . '/config/bootstrap.php';
 require_once __DIR__ . '/HttpClient.php';
 require_once __DIR__ . '/TestRunner.php';
-require_once __DIR__ . '/../helpers/functions.php';
-require_once __DIR__ . '/../models/User.php';
+require_once dirname(__DIR__) . '/helpers/functions.php';
+require_once dirname(__DIR__) . '/models/User.php';
 
 $baseUrl = $argv[1] ?? 'http://127.0.0.1:8000';
 $runner = new TestRunner();
@@ -1008,7 +1008,7 @@ $runner->test('A failed card payment cannot be marked successful (BR-9)', functi
 
     // The service layer must refuse the transition. The database permits it,
     // which is why the application is the only guard (SRS §10.4).
-    require_once __DIR__ . '/../models/Payment.php';
+    require_once dirname(__DIR__) . '/models/Payment.php';
 
     $result = Payment::confirmCodCollection((int) $failed['id']);
 

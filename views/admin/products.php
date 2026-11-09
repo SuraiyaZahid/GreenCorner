@@ -12,10 +12,10 @@
  * from a live one.
  */
 
-require_once __DIR__ . '/../../helpers/functions.php';
-require_once __DIR__ . '/../../helpers/authorization.php';
-require_once __DIR__ . '/../../helpers/csrf.php';
-require_once __DIR__ . '/../../helpers/image.php';
+require_once dirname(__DIR__, 2) . '/helpers/functions.php';
+require_once dirname(__DIR__, 2) . '/helpers/authorization.php';
+require_once dirname(__DIR__, 2) . '/helpers/csrf.php';
+require_once dirname(__DIR__, 2) . '/helpers/image.php';
 
 $pageTitle = 'Admin products';
 $adminSection = 'products';

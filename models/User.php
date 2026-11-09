@@ -14,7 +14,7 @@
  *   FR-7.3  the current role and status are re-read per request
  */
 
-require_once __DIR__ . '/../helpers/db.php';
+require_once dirname(__DIR__) . '/helpers/db.php';
 
 class User
 {

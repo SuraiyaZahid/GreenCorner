@@ -30,8 +30,8 @@
  * `Payment`. This service joins them and owns the transaction.
  */
 
-require_once __DIR__ . '/../helpers/db.php';
-require_once __DIR__ . '/../helpers/logging.php';
+require_once dirname(__DIR__) . '/helpers/db.php';
+require_once dirname(__DIR__) . '/helpers/logging.php';
 require_once __DIR__ . '/Order.php';
 require_once __DIR__ . '/OrderStatus.php';
 require_once __DIR__ . '/Payment.php';

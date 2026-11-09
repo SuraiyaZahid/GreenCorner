@@ -16,7 +16,7 @@
  *   FR-2.11 ordering: newest first, deterministic
  */
 
-require_once __DIR__ . '/../helpers/db.php';
+require_once dirname(__DIR__) . '/helpers/db.php';
 
 class Product
 {

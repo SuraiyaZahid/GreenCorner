@@ -35,7 +35,7 @@
 
 require_once __DIR__ . '/functions.php';
 
-require_once __DIR__ . '/../config/bootstrap.php';
+require_once dirname(__DIR__) . '/config/bootstrap.php';
 
 /**
  * The directory the log files are written to.

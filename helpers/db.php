@@ -17,7 +17,7 @@
  *   R-SQL-9  affected_rows = 0 is never treated as proof of non-existence
  */
 
-require_once __DIR__ . '/../config/bootstrap.php';
+require_once dirname(__DIR__) . '/config/bootstrap.php';
 
 /**
  * The one and only MySQLi connection handle for the request.

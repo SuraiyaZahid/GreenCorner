@@ -20,7 +20,7 @@
  * product's previous image continues to work (FR-6.4).
  */
 
-require_once __DIR__ . '/../config/bootstrap.php';
+require_once dirname(__DIR__) . '/config/bootstrap.php';
 
 /**
  * The width and height of the generated thumbnail, in pixels.

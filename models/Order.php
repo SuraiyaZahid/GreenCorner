@@ -27,7 +27,7 @@
  * receive the same number (decision D).
  */
 
-require_once __DIR__ . '/../helpers/db.php';
+require_once dirname(__DIR__) . '/helpers/db.php';
 
 class Order
 {

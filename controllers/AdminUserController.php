@@ -22,14 +22,14 @@
  * and never displayed again; the Admin hands it over out of band.
  */
 
-require_once __DIR__ . '/../helpers/functions.php';
-require_once __DIR__ . '/../helpers/csrf.php';
-require_once __DIR__ . '/../helpers/authorization.php';
-require_once __DIR__ . '/../helpers/logging.php';
-require_once __DIR__ . '/../helpers/session_handler.php';
-require_once __DIR__ . '/../models/User.php';
-require_once __DIR__ . '/../models/UserAdmin.php';
-require_once __DIR__ . '/../models/Order.php';
+require_once dirname(__DIR__) . '/helpers/functions.php';
+require_once dirname(__DIR__) . '/helpers/csrf.php';
+require_once dirname(__DIR__) . '/helpers/authorization.php';
+require_once dirname(__DIR__) . '/helpers/logging.php';
+require_once dirname(__DIR__) . '/helpers/session_handler.php';
+require_once dirname(__DIR__) . '/models/User.php';
+require_once dirname(__DIR__) . '/models/UserAdmin.php';
+require_once dirname(__DIR__) . '/models/Order.php';
 
 class AdminUserController
 {

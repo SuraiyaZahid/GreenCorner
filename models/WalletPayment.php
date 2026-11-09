@@ -64,7 +64,7 @@
  *   BR-12    a payment that is not verified is never treated as paid
  */
 
-require_once __DIR__ . '/../helpers/db.php';
+require_once dirname(__DIR__) . '/helpers/db.php';
 
 class WalletPayment
 {

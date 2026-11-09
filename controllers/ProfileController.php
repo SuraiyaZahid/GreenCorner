@@ -25,11 +25,11 @@
  * forge and no way to reach another account (RBAC-9).
  */
 
-require_once __DIR__ . '/../helpers/functions.php';
-require_once __DIR__ . '/../helpers/csrf.php';
-require_once __DIR__ . '/../helpers/authorization.php';
-require_once __DIR__ . '/../helpers/session_handler.php';
-require_once __DIR__ . '/../models/User.php';
+require_once dirname(__DIR__) . '/helpers/functions.php';
+require_once dirname(__DIR__) . '/helpers/csrf.php';
+require_once dirname(__DIR__) . '/helpers/authorization.php';
+require_once dirname(__DIR__) . '/helpers/session_handler.php';
+require_once dirname(__DIR__) . '/models/User.php';
 
 class ProfileController
 {

@@ -9,9 +9,9 @@
  *   FR-2.12 the detail page uses the ORIGINAL image, never the thumbnail
  */
 
-require_once __DIR__ . '/../../helpers/functions.php';
-require_once __DIR__ . '/../../helpers/authorization.php';
-require_once __DIR__ . '/../../helpers/image.php';
+require_once dirname(__DIR__, 2) . '/helpers/functions.php';
+require_once dirname(__DIR__, 2) . '/helpers/authorization.php';
+require_once dirname(__DIR__, 2) . '/helpers/image.php';
 
 $pageTitle = $product['name'];
 

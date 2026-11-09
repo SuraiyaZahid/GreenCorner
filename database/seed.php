@@ -29,9 +29,9 @@
  *   leaves orphaned image files behind.
  */
 
-require_once __DIR__ . '/../config/bootstrap.php';
-require_once __DIR__ . '/../helpers/db.php';
-require_once __DIR__ . '/../helpers/image.php';
+require_once dirname(__DIR__) . '/config/bootstrap.php';
+require_once dirname(__DIR__) . '/helpers/db.php';
+require_once dirname(__DIR__) . '/helpers/image.php';
 
 if (APP_ENV === 'production') {
     fwrite(STDERR, "Refusing to seed a production database (SRS §4.4).\n");

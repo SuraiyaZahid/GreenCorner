@@ -13,8 +13,8 @@
  *   FR-2.11 ordering: newest first, no sort control
  */
 
-require_once __DIR__ . '/../../helpers/functions.php';
-require_once __DIR__ . '/../../helpers/authorization.php';
+require_once dirname(__DIR__, 2) . '/helpers/functions.php';
+require_once dirname(__DIR__, 2) . '/helpers/authorization.php';
 
 $pageTitle = 'Products';
 

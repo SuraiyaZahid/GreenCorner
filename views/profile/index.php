@@ -19,8 +19,8 @@
  *   $profileName   string                The name shown in the form.
  */
 
-require_once __DIR__ . '/../../helpers/functions.php';
-require_once __DIR__ . '/../../helpers/csrf.php';
+require_once dirname(__DIR__, 2) . '/helpers/functions.php';
+require_once dirname(__DIR__, 2) . '/helpers/csrf.php';
 
 $pageTitle = 'Your profile';
 

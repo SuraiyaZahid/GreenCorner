@@ -24,10 +24,10 @@
  *   $adminOrderRequestedStatus  string  Refused status, if any.
  */
 
-require_once __DIR__ . '/../../../helpers/functions.php';
-require_once __DIR__ . '/../../../helpers/csrf.php';
-require_once __DIR__ . '/../../../models/WalletPayment.php';
-require_once __DIR__ . '/../../../models/Refund.php';
+require_once dirname(__DIR__, 3) . '/helpers/functions.php';
+require_once dirname(__DIR__, 3) . '/helpers/csrf.php';
+require_once dirname(__DIR__, 3) . '/models/WalletPayment.php';
+require_once dirname(__DIR__, 3) . '/models/Refund.php';
 
 $pageTitle = 'Order ' . $adminOrder['order_number'];
 $adminSection = 'orders';

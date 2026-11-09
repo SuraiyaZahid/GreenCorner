@@ -110,7 +110,9 @@ if (!defined('DB_COLLATION')) {
  * STRICT_TRANS_TABLES explicitly in the session mode it sets, so that a
  * connection cannot silently inherit a relaxed mode.
  */
-define('DB_SESSION_SQL_MODE', 'STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION,NO_ZERO_DATE,NO_ZERO_IN_DATE');
+if (!defined('DB_SESSION_SQL_MODE')) {
+    define('DB_SESSION_SQL_MODE', 'STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION,NO_ZERO_DATE,NO_ZERO_IN_DATE');
+}
 
 // ---------------------------------------------------------------------------
 // Mobile wallet merchant numbers (bKash and Nagad)
@@ -174,48 +176,79 @@ if (!defined('NAGAD_MERCHANT_DIAL_CODE')) {
 // Store currency (BR-1, SC-6)
 // ---------------------------------------------------------------------------
 
-define('CURRENCY_CODE', 'BDT');
-define('CURRENCY_SYMBOL', '৳');
+// Every constant below is defined only when it has not been defined
+// already, for the same reason as the ones above: this file is reached
+// from several directories - the front controller, the test suite, the
+// database tools - and each of them spells the path differently. Whether
+// PHP treats two spellings of the same file as one file inside a single
+// request is not something the application should depend on, so a second
+// inclusion must be harmless rather than a warning.
+if (!defined('CURRENCY_CODE')) {
+    define('CURRENCY_CODE', 'BDT');
+}
+if (!defined('CURRENCY_SYMBOL')) {
+    define('CURRENCY_SYMBOL', '৳');
+}
 
 // ---------------------------------------------------------------------------
 // Sessions (FR-1.10, FR-7.6)
 // ---------------------------------------------------------------------------
 
 // Inactivity timeout in seconds: 8 hours.
-define('SESSION_IDLE_TIMEOUT', 28800);
+if (!defined('SESSION_IDLE_TIMEOUT')) {
+    define('SESSION_IDLE_TIMEOUT', 28800);
+}
 
 // Absolute maximum lifetime in seconds: 7 days.
-define('SESSION_ABSOLUTE_TIMEOUT', 604800);
+if (!defined('SESSION_ABSOLUTE_TIMEOUT')) {
+    define('SESSION_ABSOLUTE_TIMEOUT', 604800);
+}
 
 // Length of the generated session identifier, in characters (FR-7.6).
-define('SESSION_ID_LENGTH', 32);
+if (!defined('SESSION_ID_LENGTH')) {
+    define('SESSION_ID_LENGTH', 32);
+}
 
 // Name of the session cookie.
-define('SESSION_COOKIE_NAME', 'greencorner_session');
+if (!defined('SESSION_COOKIE_NAME')) {
+    define('SESSION_COOKIE_NAME', 'greencorner_session');
+}
 
 // ---------------------------------------------------------------------------
 // Login rate limiting (NFR-S-06, SEC-13)
 // ---------------------------------------------------------------------------
 
 // Maximum failed login attempts allowed from one source address.
-define('LOGIN_MAX_ATTEMPTS', 5);
+if (!defined('LOGIN_MAX_ATTEMPTS')) {
+    define('LOGIN_MAX_ATTEMPTS', 5);
+}
 
 // How long (seconds) a source address stays locked out after too many failures.
-define('LOGIN_LOCKOUT_SECONDS', 900);
+if (!defined('LOGIN_LOCKOUT_SECONDS')) {
+    define('LOGIN_LOCKOUT_SECONDS', 900);
+}
 
 // ---------------------------------------------------------------------------
 // Uploads (FR-2.12, SEC-4)
 // ---------------------------------------------------------------------------
 
-define('MAX_UPLOAD_BYTES', 2097152); // 2 MB
-define('ALLOWED_IMAGE_MIME', ['image/jpeg', 'image/png', 'image/webp']);
+if (!defined('MAX_UPLOAD_BYTES')) {
+    define('MAX_UPLOAD_BYTES', 2097152); // 2 MB
+}
+if (!defined('ALLOWED_IMAGE_MIME')) {
+    define('ALLOWED_IMAGE_MIME', ['image/jpeg', 'image/png', 'image/webp']);
+}
 
 // ---------------------------------------------------------------------------
 // Paths
 // ---------------------------------------------------------------------------
 
 // Directory that stores uploaded product images (outside the web root, SEC-6).
-define('UPLOAD_DIR', APP_ROOT . DIRECTORY_SEPARATOR . 'storage' . DIRECTORY_SEPARATOR . 'uploads');
+if (!defined('UPLOAD_DIR')) {
+    define('UPLOAD_DIR', APP_ROOT . DIRECTORY_SEPARATOR . 'storage' . DIRECTORY_SEPARATOR . 'uploads');
+}
 
 // Public URL prefix under which the upload directory is served.
-define('UPLOAD_URL', APP_URL . '/uploads');
+if (!defined('UPLOAD_URL')) {
+    define('UPLOAD_URL', APP_URL . '/uploads');
+}

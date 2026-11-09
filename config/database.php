@@ -108,28 +108,34 @@ if (!defined('GREEN_CORNER_REQUIRED_DB_SETTINGS')) {
 /**
  * The name of a setting that is missing, or null when every setting is
  * present.
+ *
+ * Declared with a guard, for the same reason as the functions in
+ * config/bootstrap.php: this file is reached from several directories, each
+ * spelling the path differently, and a second inclusion must be harmless.
  */
-function green_corner_missing_setting(array $requirements): ?string
-{
-    foreach ($requirements as $label => $constants) {
-        foreach ($constants as $constant) {
-            if (!defined($constant)) {
-                continue;
+if (!function_exists('green_corner_missing_setting')) {
+    function green_corner_missing_setting(array $requirements): ?string
+    {
+        foreach ($requirements as $label => $constants) {
+            foreach ($constants as $constant) {
+                if (!defined($constant)) {
+                    continue;
+                }
+
+                $value = constant($constant);
+
+                // A non-empty string or any non-string value counts as present.
+                // Only a null, false or empty string is missing.
+                if ($value !== null && $value !== false && $value !== '') {
+                    continue 2;
+                }
             }
 
-            $value = constant($constant);
-
-            // A non-empty string or any non-string value counts as present.
-            // Only a null, false or empty string is missing.
-            if ($value !== null && $value !== false && $value !== '') {
-                continue 2;
-            }
+            return $label;
         }
 
-        return $label;
+        return null;
     }
-
-    return null;
 }
 
 /**
@@ -146,21 +152,23 @@ function green_corner_missing_setting(array $requirements): ?string
  * @throws RuntimeException if a setting is missing or empty.
  * @return void
  */
-function green_corner_require_database_settings(): void
-{
-    $missingSetting = green_corner_missing_setting(GREEN_CORNER_REQUIRED_DB_SETTINGS);
+if (!function_exists('green_corner_require_database_settings')) {
+    function green_corner_require_database_settings(): void
+    {
+        $missingSetting = green_corner_missing_setting(GREEN_CORNER_REQUIRED_DB_SETTINGS);
 
-    if ($missingSetting === null) {
-        return;
+        if ($missingSetting === null) {
+            return;
+        }
+
+        $message = "GreenCorner configuration error: the setting {$missingSetting} is missing or empty.\n"
+            . "\n"
+            . "Create the local configuration file and fill it in:\n"
+            . "\n"
+            . '    copy config/config.example.php config/config.local.php' . "\n"
+            . "\n"
+            . "Then set {$missingSetting} in config/config.local.php.\n";
+
+        throw new RuntimeException($message);
     }
-
-    $message = "GreenCorner configuration error: the setting {$missingSetting} is missing or empty.\n"
-        . "\n"
-        . "Create the local configuration file and fill it in:\n"
-        . "\n"
-        . '    copy config/config.example.php config/config.local.php' . "\n"
-        . "\n"
-        . "Then set {$missingSetting} in config/config.local.php.\n";
-
-    throw new RuntimeException($message);
 }

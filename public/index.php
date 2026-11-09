@@ -13,7 +13,7 @@
  * directory rewrites all requests to it.
  */
 
-require_once __DIR__ . '/../config/bootstrap.php';
+require_once dirname(__DIR__) . '/config/bootstrap.php';
 
 // Errors are never printed into the response body: a stray warning would
 // send the headers early and corrupt the status code and the redirect that
@@ -23,13 +23,13 @@ ini_set('display_errors', '0');
 ini_set('log_errors', '1');
 error_reporting(E_ALL);
 
-require_once __DIR__ . '/../helpers/functions.php';
-require_once __DIR__ . '/../helpers/db.php';
-require_once __DIR__ . '/../helpers/session_handler.php';
-require_once __DIR__ . '/../helpers/csrf.php';
-require_once __DIR__ . '/../helpers/authorization.php';
-require_once __DIR__ . '/../helpers/security_headers.php';
-require_once __DIR__ . '/../controllers/ErrorController.php';
+require_once dirname(__DIR__) . '/helpers/functions.php';
+require_once dirname(__DIR__) . '/helpers/db.php';
+require_once dirname(__DIR__) . '/helpers/session_handler.php';
+require_once dirname(__DIR__) . '/helpers/csrf.php';
+require_once dirname(__DIR__) . '/helpers/authorization.php';
+require_once dirname(__DIR__) . '/helpers/security_headers.php';
+require_once dirname(__DIR__) . '/controllers/ErrorController.php';
 
 // The security headers are sent before anything can produce output, so that
 // every response carries them — the normal pages, the 404, the 403, the 500

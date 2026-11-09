@@ -34,7 +34,7 @@
  *   BACKUP_ENCRYPTION_KEY  the GPG passphrase, when --key is not given
  */
 
-require_once __DIR__ . '/../config/bootstrap.php';
+require_once dirname(__DIR__) . '/config/bootstrap.php';
 
 require_once __DIR__ . '/backup.php';
 

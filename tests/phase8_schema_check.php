@@ -10,8 +10,8 @@
  *   php tests/phase8_schema_check.php
  */
 
-require_once __DIR__ . '/../config/bootstrap.php';
-require_once __DIR__ . '/../helpers/db.php';
+require_once dirname(__DIR__) . '/config/bootstrap.php';
+require_once dirname(__DIR__) . '/helpers/db.php';
 
 $failures = 0;
 

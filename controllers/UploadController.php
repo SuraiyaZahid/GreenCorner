@@ -19,8 +19,8 @@
  * served. Anything else is refused with 404.
  */
 
-require_once __DIR__ . '/../helpers/functions.php';
-require_once __DIR__ . '/../helpers/image.php';
+require_once dirname(__DIR__) . '/helpers/functions.php';
+require_once dirname(__DIR__) . '/helpers/image.php';
 
 class UploadController
 {

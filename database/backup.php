@@ -54,8 +54,8 @@
  *   BACKUP_DIR             where the backups are written
  */
 
-require_once __DIR__ . '/../config/bootstrap.php';
-require_once __DIR__ . '/../helpers/functions.php';
+require_once dirname(__DIR__) . '/config/bootstrap.php';
+require_once dirname(__DIR__) . '/helpers/functions.php';
 
 /**
  * The tables that are never included in a backup.
@@ -702,7 +702,7 @@ function backup_mysqldump_version(): string
  */
 function backup_table_counts(): array
 {
-    require_once __DIR__ . '/../helpers/db.php';
+    require_once dirname(__DIR__) . '/helpers/db.php';
 
     $counts = array();
 

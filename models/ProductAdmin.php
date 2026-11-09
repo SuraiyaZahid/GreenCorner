@@ -24,8 +24,8 @@
  * FR-6.11; it has no meaning for a product and is not used here.
  */
 
-require_once __DIR__ . '/../helpers/db.php';
-require_once __DIR__ . '/../helpers/image.php';
+require_once dirname(__DIR__) . '/helpers/db.php';
+require_once dirname(__DIR__) . '/helpers/image.php';
 
 class ProductAdmin
 {

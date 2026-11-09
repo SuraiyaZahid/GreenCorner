@@ -18,13 +18,13 @@
 
 require_once __DIR__ . '/TestRunner.php';
 require_once __DIR__ . '/HttpClient.php';
-require_once __DIR__ . '/../config/bootstrap.php';
-require_once __DIR__ . '/../helpers/db.php';
-require_once __DIR__ . '/../helpers/image.php';
-require_once __DIR__ . '/../models/Product.php';
-require_once __DIR__ . '/../models/ProductAdmin.php';
-require_once __DIR__ . '/../models/Category.php';
-require_once __DIR__ . '/../models/User.php';
+require_once dirname(__DIR__) . '/config/bootstrap.php';
+require_once dirname(__DIR__) . '/helpers/db.php';
+require_once dirname(__DIR__) . '/helpers/image.php';
+require_once dirname(__DIR__) . '/models/Product.php';
+require_once dirname(__DIR__) . '/models/ProductAdmin.php';
+require_once dirname(__DIR__) . '/models/Category.php';
+require_once dirname(__DIR__) . '/models/User.php';
 
 $baseUrl = $argv[1] ?? 'http://127.0.0.1:8000';
 $runner = new TestRunner();

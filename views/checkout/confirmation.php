@@ -17,9 +17,9 @@
  *   $confirmationRefunds array<int, array<string, mixed>>  The refunds.
  */
 
-require_once __DIR__ . '/../../helpers/functions.php';
-require_once __DIR__ . '/../../models/WalletPayment.php';
-require_once __DIR__ . '/../../models/Refund.php';
+require_once dirname(__DIR__, 2) . '/helpers/functions.php';
+require_once dirname(__DIR__, 2) . '/models/WalletPayment.php';
+require_once dirname(__DIR__, 2) . '/models/Refund.php';
 
 $pageTitle = 'Order ' . $order['order_number'];
 

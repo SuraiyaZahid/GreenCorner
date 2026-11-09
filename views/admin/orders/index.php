@@ -17,8 +17,8 @@
  *   $query     array<string, string>              The query parameters to keep.
  */
 
-require_once __DIR__ . '/../../../helpers/functions.php';
-require_once __DIR__ . '/../../../models/WalletPayment.php';
+require_once dirname(__DIR__, 3) . '/helpers/functions.php';
+require_once dirname(__DIR__, 3) . '/models/WalletPayment.php';
 
 $pageTitle = 'Orders';
 $adminSection = 'orders';

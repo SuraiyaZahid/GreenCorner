@@ -61,25 +61,34 @@ if (!defined('GREEN_CORNER_REQUIRED_EXTENSIONS')) {
 /**
  * The extensions that are not loaded.
  *
+ * Declared with a guard, because this file is reached from several
+ * directories - the front controller, the test suite, the database tools -
+ * and each of them spells the path differently. Whether PHP treats two
+ * spellings of the same file as one file inside a single request is not
+ * something the application should depend on, so a second inclusion must be
+ * harmless rather than fatal.
+ *
  * @return array<int, string> The names of the missing extensions.
  */
-function green_corner_missing_extensions(): array
-{
-    $missing = array();
+if (!function_exists('green_corner_missing_extensions')) {
+    function green_corner_missing_extensions(): array
+    {
+        $missing = array();
 
-    foreach (GREEN_CORNER_REQUIRED_EXTENSIONS as $extension => $detail) {
-        if (extension_loaded($extension)) {
-            continue;
+        foreach (GREEN_CORNER_REQUIRED_EXTENSIONS as $extension => $detail) {
+            if (extension_loaded($extension)) {
+                continue;
+            }
+
+            // The extension may be compiled in but its functions unavailable, so
+            // the function is checked as well.
+            if (!function_exists($detail['function'])) {
+                $missing[] = $extension;
+            }
         }
 
-        // The extension may be compiled in but its functions unavailable, so
-        // the function is checked as well.
-        if (!function_exists($detail['function'])) {
-            $missing[] = $extension;
-        }
+        return $missing;
     }
-
-    return $missing;
 }
 
 /**
@@ -93,32 +102,34 @@ function green_corner_missing_extensions(): array
  *
  * @return void
  */
-function green_corner_require_extensions(): void
-{
-    $missing = green_corner_missing_extensions();
+if (!function_exists('green_corner_require_extensions')) {
+    function green_corner_require_extensions(): void
+    {
+        $missing = green_corner_missing_extensions();
 
-    if ($missing === array()) {
-        return;
+        if ($missing === array()) {
+            return;
+        }
+
+        $message = 'GreenCorner cannot start: the following PHP extension'
+            . (count($missing) === 1 ? ' is' : 's are')
+            . ' missing: ' . implode(', ', $missing) . ".\n"
+            . "\n"
+            . "Install " . (count($missing) === 1 ? 'it' : 'them') . " and restart the server:\n"
+            . "\n"
+            . '    docker-php-ext-install ' . implode(' ', $missing) . "\n"
+            . "\n"
+            . "The missing extensions are needed for:\n";
+
+        foreach ($missing as $extension) {
+            $detail = GREEN_CORNER_REQUIRED_EXTENSIONS[$extension];
+            $message .= '  - ' . $extension . ': ' . $detail['purpose'] . "\n";
+        }
+
+        error_log('[GreenCorner] ' . $message);
+
+        throw new RuntimeException($message);
     }
-
-    $message = 'GreenCorner cannot start: the following PHP extension'
-        . (count($missing) === 1 ? ' is' : 's are')
-        . ' missing: ' . implode(', ', $missing) . ".\n"
-        . "\n"
-        . "Install " . (count($missing) === 1 ? 'it' : 'them') . " and restart the server:\n"
-        . "\n"
-        . '    docker-php-ext-install ' . implode(' ', $missing) . "\n"
-        . "\n"
-        . "The missing extensions are needed for:\n";
-
-    foreach ($missing as $extension) {
-        $detail = GREEN_CORNER_REQUIRED_EXTENSIONS[$extension];
-        $message .= '  - ' . $extension . ': ' . $detail['purpose'] . "\n";
-    }
-
-    error_log('[GreenCorner] ' . $message);
-
-    throw new RuntimeException($message);
 }
 
 green_corner_require_extensions();

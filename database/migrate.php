@@ -11,8 +11,8 @@
  *   php database/migrate.php --status
  */
 
-require_once __DIR__ . '/../config/bootstrap.php';
-require_once __DIR__ . '/../helpers/db.php';
+require_once dirname(__DIR__) . '/config/bootstrap.php';
+require_once dirname(__DIR__) . '/helpers/db.php';
 
 $statusOnly = in_array('--status', array_slice($argv, 1), true);
 

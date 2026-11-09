@@ -23,11 +23,11 @@
  * may not shop (FR-7.5).
  */
 
-require_once __DIR__ . '/../helpers/functions.php';
-require_once __DIR__ . '/../helpers/csrf.php';
-require_once __DIR__ . '/../helpers/authorization.php';
-require_once __DIR__ . '/../models/Cart.php';
-require_once __DIR__ . '/../models/Product.php';
+require_once dirname(__DIR__) . '/helpers/functions.php';
+require_once dirname(__DIR__) . '/helpers/csrf.php';
+require_once dirname(__DIR__) . '/helpers/authorization.php';
+require_once dirname(__DIR__) . '/models/Cart.php';
+require_once dirname(__DIR__) . '/models/Product.php';
 
 class CartController
 {

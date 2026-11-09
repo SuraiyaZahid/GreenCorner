@@ -6,7 +6,7 @@
  * exception is logged server-side and is never rendered to the client.
  */
 
-require_once __DIR__ . '/../../helpers/functions.php';
+require_once dirname(__DIR__, 2) . '/helpers/functions.php';
 
 $pageTitle = $pageTitle ?? 'Something went wrong';
 

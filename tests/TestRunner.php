@@ -7,7 +7,7 @@
  * exits non-zero when any test fails, so the suite can be run in CI.
  */
 
-require_once __DIR__ . '/../config/bootstrap.php';
+require_once dirname(__DIR__) . '/config/bootstrap.php';
 
 class TestRunner
 {

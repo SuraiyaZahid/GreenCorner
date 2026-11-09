@@ -353,7 +353,7 @@ function require_capability(string $capability, bool $isJsonRequest = false): vo
 
     // FR-7.4 / FR-7.5: the wrong role receives 403 and the access-denied page.
     http_response_code(403);
-    require_once __DIR__ . '/../controllers/ErrorController.php';
+    require_once dirname(__DIR__) . '/controllers/ErrorController.php';
     (new ErrorController())->accessDenied($role);
     exit;
 }
@@ -383,7 +383,7 @@ function require_role(string $role, bool $isJsonRequest = false): void
     }
 
     http_response_code(403);
-    require_once __DIR__ . '/../controllers/ErrorController.php';
+    require_once dirname(__DIR__) . '/controllers/ErrorController.php';
     (new ErrorController())->accessDenied(current_role());
     exit;
 }

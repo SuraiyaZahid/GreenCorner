@@ -23,8 +23,8 @@
  */
 
 require_once __DIR__ . '/TestRunner.php';
-require_once __DIR__ . '/../helpers/session_handler.php';
-require_once __DIR__ . '/../database/backup.php';
+require_once dirname(__DIR__) . '/helpers/session_handler.php';
+require_once dirname(__DIR__) . '/database/backup.php';
 
 $root = dirname(__DIR__);
 

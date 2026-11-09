@@ -122,7 +122,7 @@ function redirect(string $path): void
 function not_found(string $message = 'We could not find the page you were looking for.'): void
 {
     http_response_code(404);
-    require_once __DIR__ . '/../controllers/ErrorController.php';
+    require_once dirname(__DIR__) . '/controllers/ErrorController.php';
     (new ErrorController())->notFound($message);
     exit;
 }

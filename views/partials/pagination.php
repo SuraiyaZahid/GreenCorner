@@ -15,7 +15,7 @@
  *   $query       array<string,string>  The query parameters to preserve.
  */
 
-require_once __DIR__ . '/../../helpers/functions.php';
+require_once dirname(__DIR__, 2) . '/helpers/functions.php';
 
 $page = (int) ($page ?? 1);
 $lastPage = max(1, (int) ($lastPage ?? 1));

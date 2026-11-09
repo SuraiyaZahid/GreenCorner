@@ -20,8 +20,8 @@
  *   $adminUserErrors      array<string, string>  The field errors, if any.
  */
 
-require_once __DIR__ . '/../../../helpers/functions.php';
-require_once __DIR__ . '/../../../helpers/csrf.php';
+require_once dirname(__DIR__, 3) . '/helpers/functions.php';
+require_once dirname(__DIR__, 3) . '/helpers/csrf.php';
 
 $pageTitle = 'User ' . $adminUser['email'];
 $adminSection = 'users';

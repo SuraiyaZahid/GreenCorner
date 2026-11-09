@@ -20,13 +20,13 @@
  * part of Phase 4: they remain in Phase 5 (decision E).
  */
 
-require_once __DIR__ . '/../helpers/functions.php';
-require_once __DIR__ . '/../helpers/authorization.php';
-require_once __DIR__ . '/../models/Order.php';
-require_once __DIR__ . '/../models/Cart.php';
-require_once __DIR__ . '/../models/Payment.php';
-require_once __DIR__ . '/../models/WalletPayment.php';
-require_once __DIR__ . '/../models/Refund.php';
+require_once dirname(__DIR__) . '/helpers/functions.php';
+require_once dirname(__DIR__) . '/helpers/authorization.php';
+require_once dirname(__DIR__) . '/models/Order.php';
+require_once dirname(__DIR__) . '/models/Cart.php';
+require_once dirname(__DIR__) . '/models/Payment.php';
+require_once dirname(__DIR__) . '/models/WalletPayment.php';
+require_once dirname(__DIR__) . '/models/Refund.php';
 
 class OrderController
 {

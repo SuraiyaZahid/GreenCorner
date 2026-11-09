@@ -25,10 +25,10 @@
  *   $referenceCode  string                            The order reference shown to the customer.
  */
 
-require_once __DIR__ . '/../../helpers/functions.php';
-require_once __DIR__ . '/../../helpers/image.php';
-require_once __DIR__ . '/../../helpers/csrf.php';
-require_once __DIR__ . '/../../models/WalletPayment.php';
+require_once dirname(__DIR__, 2) . '/helpers/functions.php';
+require_once dirname(__DIR__, 2) . '/helpers/image.php';
+require_once dirname(__DIR__, 2) . '/helpers/csrf.php';
+require_once dirname(__DIR__, 2) . '/models/WalletPayment.php';
 
 $pageTitle = 'Payment';
 

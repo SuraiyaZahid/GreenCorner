@@ -18,7 +18,7 @@
  *   account is still used for the restore itself.
  */
 
-require_once __DIR__ . '/../config/bootstrap.php';
+require_once dirname(__DIR__) . '/config/bootstrap.php';
 
 function scratch_option(string $name, ?string $default = null): ?string
 {

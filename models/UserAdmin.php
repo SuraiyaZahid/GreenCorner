@@ -21,7 +21,7 @@
  * new hash and sets the forced-change flag.
  */
 
-require_once __DIR__ . '/../helpers/db.php';
+require_once dirname(__DIR__) . '/helpers/db.php';
 
 class UserAdmin
 {

@@ -6,7 +6,7 @@
  * introduction, the category strip and a Browse Products call to action.
  */
 
-require_once __DIR__ . '/../helpers/functions.php';
+require_once dirname(__DIR__) . '/helpers/functions.php';
 
 $pageTitle = 'Plants, seeds and garden supplies';
 

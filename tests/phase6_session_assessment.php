@@ -12,9 +12,9 @@
  *   php tests/phase6_session_assessment.php
  */
 
-require_once __DIR__ . '/../config/bootstrap.php';
+require_once dirname(__DIR__) . '/config/bootstrap.php';
 
-require_once __DIR__ . '/../helpers/session_handler.php';
+require_once dirname(__DIR__) . '/helpers/session_handler.php';
 
 echo "=== The session table ===\n\n";
 

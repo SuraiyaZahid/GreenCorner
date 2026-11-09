@@ -9,10 +9,10 @@
  * the navigation bar correctly (FR-7.5: no cart badge for an Admin).
  */
 
-require_once __DIR__ . '/../../helpers/functions.php';
-require_once __DIR__ . '/../../helpers/csrf.php';
-require_once __DIR__ . '/../../helpers/authorization.php';
-require_once __DIR__ . '/../../helpers/security_headers.php';
+require_once dirname(__DIR__, 2) . '/helpers/functions.php';
+require_once dirname(__DIR__, 2) . '/helpers/csrf.php';
+require_once dirname(__DIR__, 2) . '/helpers/authorization.php';
+require_once dirname(__DIR__, 2) . '/helpers/security_headers.php';
 
 $pageTitle = $pageTitle ?? APP_NAME;
 $flash = get_flash();
@@ -35,7 +35,7 @@ $currentRole = $currentUser === null ? null : (string) $currentUser['role_name']
 // FR-7.5: the cart count is not rendered in the navigation for an Admin.
 $cartCount = 0;
 if ($currentRole === 'User' && $currentUser !== null) {
-    require_once __DIR__ . '/../../models/Cart.php';
+    require_once dirname(__DIR__, 2) . '/models/Cart.php';
     try {
         $cartCount = Cart::countItems((int) $currentUser['id']);
     } catch (Throwable $e) {

@@ -8,8 +8,8 @@
  */
 
 require_once __DIR__ . '/HttpClient.php';
-require_once __DIR__ . '/../helpers/db.php';
-require_once __DIR__ . '/../models/User.php';
+require_once dirname(__DIR__) . '/helpers/db.php';
+require_once dirname(__DIR__) . '/models/User.php';
 
 $base = $argv[1] ?? 'http://127.0.0.1:8000';
 $client = new HttpClient($base);

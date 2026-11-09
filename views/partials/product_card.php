@@ -13,8 +13,8 @@
  *   $showAddToCart  bool            Whether to show the Add to Cart button.
  */
 
-require_once __DIR__ . '/../../helpers/functions.php';
-require_once __DIR__ . '/../../helpers/image.php';
+require_once dirname(__DIR__, 2) . '/helpers/functions.php';
+require_once dirname(__DIR__, 2) . '/helpers/image.php';
 
 $showAddToCart = $showAddToCart ?? false;
 $productId = (int) $product['id'];

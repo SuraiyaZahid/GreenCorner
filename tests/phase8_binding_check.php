@@ -15,8 +15,8 @@
  *   php tests/phase8_binding_check.php
  */
 
-require_once __DIR__ . '/../config/bootstrap.php';
-require_once __DIR__ . '/../helpers/db.php';
+require_once dirname(__DIR__) . '/config/bootstrap.php';
+require_once dirname(__DIR__) . '/helpers/db.php';
 
 /**
  * Split an argument list on the commas that are not inside a string or a

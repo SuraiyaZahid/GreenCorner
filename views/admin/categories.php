@@ -8,9 +8,9 @@
  *   and the blocking products are named.
  */
 
-require_once __DIR__ . '/../../helpers/functions.php';
-require_once __DIR__ . '/../../helpers/authorization.php';
-require_once __DIR__ . '/../../helpers/csrf.php';
+require_once dirname(__DIR__, 2) . '/helpers/functions.php';
+require_once dirname(__DIR__, 2) . '/helpers/authorization.php';
+require_once dirname(__DIR__, 2) . '/helpers/csrf.php';
 
 $pageTitle = 'Admin categories';
 $adminSection = 'categories';

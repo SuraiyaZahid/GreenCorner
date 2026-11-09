@@ -206,8 +206,8 @@ function csrf_render_rejected_form(string $form, array $context = array()): void
             // inputs are preserved so the Admin does not have to retype
             // them. The file input is always cleared: an uploaded file
             // cannot be preserved across a request.
-            require_once __DIR__ . '/../models/ProductAdmin.php';
-            require_once __DIR__ . '/../models/Category.php';
+            require_once dirname(__DIR__) . '/models/ProductAdmin.php';
+            require_once dirname(__DIR__) . '/models/Category.php';
 
             $categories = Category::all();
             $errors = array('_csrf' => CSRF_ERROR_MESSAGE);
@@ -233,7 +233,7 @@ function csrf_render_rejected_form(string $form, array $context = array()): void
 
         case 'admin_category':
             // The Admin category form (P-16).
-            require_once __DIR__ . '/../models/Category.php';
+            require_once dirname(__DIR__) . '/models/Category.php';
 
             $categories = Category::all();
             $errors = array('_csrf' => CSRF_ERROR_MESSAGE);
@@ -259,8 +259,8 @@ function csrf_render_rejected_form(string $form, array $context = array()): void
         case 'checkout_confirm':            // The checkout form (P-09). The delivery address is safe to
             // preserve; the card fields are not, because they are sensitive
             // and the password field must never be repopulated.
-            require_once __DIR__ . '/../models/Cart.php';
-            require_once __DIR__ . '/../models/Payment.php';
+            require_once dirname(__DIR__) . '/models/Cart.php';
+            require_once dirname(__DIR__) . '/models/Payment.php';
 
             $user = current_user();
             $rows = $user === null ? array() : Cart::items((int) $user['id']);
@@ -308,7 +308,7 @@ function csrf_render_rejected_form(string $form, array $context = array()): void
             // account that typed it.
             $_SESSION['profile_name'] = post_string('full_name');
 
-            require_once __DIR__ . '/../models/User.php';
+            require_once dirname(__DIR__) . '/models/User.php';
 
             $profileUser = current_user();
             $profileErrors = array('_csrf' => CSRF_ERROR_MESSAGE);
@@ -320,7 +320,7 @@ function csrf_render_rejected_form(string $form, array $context = array()): void
             // The profile password form (P-13). Nothing is preserved: all
             // three fields are passwords, and a password must never be
             // written back into the response (SEC-13).
-            require_once __DIR__ . '/../models/User.php';
+            require_once dirname(__DIR__) . '/models/User.php';
 
             $profileUser = current_user();
             $profileErrors = array('_csrf' => CSRF_ERROR_MESSAGE);
@@ -331,11 +331,11 @@ function csrf_render_rejected_form(string $form, array $context = array()): void
         case 'admin_order_status':
             // The Admin fulfilment-status form (P-18). The requested status
             // is safe to preserve, because it is a value from a fixed set.
-            require_once __DIR__ . '/../models/Order.php';
-            require_once __DIR__ . '/../models/Payment.php';
-            require_once __DIR__ . '/../models/OrderStatus.php';
-            require_once __DIR__ . '/../models/WalletPayment.php';
-            require_once __DIR__ . '/../models/Refund.php';
+            require_once dirname(__DIR__) . '/models/Order.php';
+            require_once dirname(__DIR__) . '/models/Payment.php';
+            require_once dirname(__DIR__) . '/models/OrderStatus.php';
+            require_once dirname(__DIR__) . '/models/WalletPayment.php';
+            require_once dirname(__DIR__) . '/models/Refund.php';
 
             $adminOrderId = (int) ($context['id'] ?? 0);
             $adminOrder = $adminOrderId > 0 ? Order::find($adminOrderId) : null;
@@ -376,9 +376,9 @@ function csrf_render_rejected_form(string $form, array $context = array()): void
         case 'admin_cod_confirm':
             // The Admin COD cash-collection form (P-18). Nothing is
             // preserved: the form carries no free-text input.
-            require_once __DIR__ . '/../models/Order.php';
-            require_once __DIR__ . '/../models/Payment.php';
-            require_once __DIR__ . '/../models/OrderStatus.php';
+            require_once dirname(__DIR__) . '/models/Order.php';
+            require_once dirname(__DIR__) . '/models/Payment.php';
+            require_once dirname(__DIR__) . '/models/OrderStatus.php';
 
             $adminOrderId = (int) ($context['id'] ?? 0);
             $adminOrder = $adminOrderId > 0 ? Order::find($adminOrderId) : null;
@@ -414,11 +414,11 @@ function csrf_render_rejected_form(string $form, array $context = array()): void
             // The Admin wallet-payment forms (P-18). The rejection reason
             // and the refund details are preserved, because they are safe
             // free-text inputs the Admin would otherwise have to retype.
-            require_once __DIR__ . '/../models/Order.php';
-            require_once __DIR__ . '/../models/Payment.php';
-            require_once __DIR__ . '/../models/OrderStatus.php';
-            require_once __DIR__ . '/../models/WalletPayment.php';
-            require_once __DIR__ . '/../models/Refund.php';
+            require_once dirname(__DIR__) . '/models/Order.php';
+            require_once dirname(__DIR__) . '/models/Payment.php';
+            require_once dirname(__DIR__) . '/models/OrderStatus.php';
+            require_once dirname(__DIR__) . '/models/WalletPayment.php';
+            require_once dirname(__DIR__) . '/models/Refund.php';
 
             $adminOrderId = (int) ($context['id'] ?? 0);
             $adminOrder = $adminOrderId > 0 ? Order::find($adminOrderId) : null;
@@ -456,7 +456,7 @@ function csrf_render_rejected_form(string $form, array $context = array()): void
             // The Admin password-reset form (P-20). Nothing is preserved:
             // the only field is a temporary password, which must never be
             // written back into the response (SEC-18).
-            require_once __DIR__ . '/../models/UserAdmin.php';
+            require_once dirname(__DIR__) . '/models/UserAdmin.php';
 
             $adminUserId = (int) ($context['id'] ?? 0);
             $adminUser = $adminUserId > 0 ? UserAdmin::find($adminUserId) : null;
@@ -477,7 +477,7 @@ function csrf_render_rejected_form(string $form, array $context = array()): void
             // No known form: show the access-denied page rather than
             // rendering an unrelated form.
             http_response_code(403);
-            require_once __DIR__ . '/../controllers/ErrorController.php';
+            require_once dirname(__DIR__) . '/controllers/ErrorController.php';
             (new ErrorController())->accessDenied(null);
             break;
     }

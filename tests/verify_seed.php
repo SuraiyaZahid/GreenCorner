@@ -6,9 +6,9 @@
  * square thumbnail on disk, and that the seed left no duplicate rows behind.
  */
 
-require_once __DIR__ . '/../config/bootstrap.php';
-require_once __DIR__ . '/../helpers/db.php';
-require_once __DIR__ . '/../helpers/image.php';
+require_once dirname(__DIR__) . '/config/bootstrap.php';
+require_once dirname(__DIR__) . '/helpers/db.php';
+require_once dirname(__DIR__) . '/helpers/image.php';
 
 $rows = db_select(
     'SELECT `id`, `name`, `image_path`, `thumbnail_path` FROM `products` ORDER BY `id`'
