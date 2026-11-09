@@ -1,12 +1,11 @@
 # GreenCorner — Continuous Integration
 #
-# STATUS: PREPARED, PENDING ITS FIRST RUN.
+# STATUS: PREPARED, FIRST RUN UNDER WAY.
 #
-# This project does not currently have an initialised Git repository, so this
-# workflow has never been executed. It is committed to the tree as a file and
-# is validated by tests/phase6_ci_checks.php, but a workflow file can only
-# run once the project is a Git repository on GitHub. Initialising Git and
-# creating the remote are separate decisions that have not been taken.
+# The project is tracked with Git and published to GitHub, so this workflow
+# runs on every push and pull request. It is committed to the tree as a file
+# and is validated by tests/phase6_ci_checks.php, so that a real run is as
+# likely as possible to succeed.
 #
 # WHAT IT DOES
 #
@@ -81,12 +80,20 @@ jobs:
       - name: Check that no forbidden SQL form appears (R-SQL-7, NFR-M-04, AC-42)
         run: |
           set -euo pipefail
+          # The tests directory is excluded on purpose: the Phase 1 suite
+          # contains the literal strings "INSERT IGNORE" and "UPDATE IGNORE"
+          # because it scans the application for them. The application code
+          # is what this check is about.
+          #
+          # The same exclusion is applied by the Phase 1 test itself, so the
+          # two checks always agree on what "the code base" means.
           if grep -rInE '\b(INSERT[[:space:]]+IGNORE|UPDATE[[:space:]]+IGNORE)\b' \
-               --include='*.php' --include='*.sql' . ; then
+               --include='*.php' --include='*.sql' \
+               --exclude-dir=tests --exclude-dir=.git --exclude-dir=.tools . ; then
             echo "A forbidden IGNORE write was found (AC-42)."
             exit 1
           fi
-          echo "No INSERT IGNORE or UPDATE IGNORE appears in the code base."
+          echo "No INSERT IGNORE or UPDATE IGNORE appears in the application code."
 
       - name: Check that no credential is committed (D-001, SEC-6)
         run: |
