@@ -1,0 +1,345 @@
+# GreenCorner — Continuous Integration
+#
+# STATUS: PREPARED, PENDING ITS FIRST RUN.
+#
+# This project does not currently have an initialised Git repository, so this
+# workflow has never been executed. It is committed to the tree as a file and
+# is validated by tests/phase6_ci_checks.php, but a workflow file can only
+# run once the project is a Git repository on GitHub. Initialising Git and
+# creating the remote are separate decisions that have not been taken.
+#
+# WHAT IT DOES
+#
+#   1. Static checks — PHP syntax over every file, the forbidden SQL forms,
+#      the error-output setting, and the absence of a credential in a tracked
+#      file.
+#   2. The Docker build — the image is built and the container starts.
+#   3. The test suites — the application is driven over HTTP against the
+#      container, exactly as tests/serve.sh does locally.
+#   4. The security checks — a separate job, so a green test run can never
+#      quietly hide a red security run.
+#
+# The workflow is deliberately split into jobs that must all pass. A job
+# that cannot run (for example, because the image registry is unreachable) is
+# a failure, not a skip.
+
+name: CI
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+    branches: ['**']
+  workflow_dispatch:
+
+# The workflow never allows a concurrent run to overlap itself, and it
+# cancels a superseded run on the same branch.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  # -------------------------------------------------------------------------
+  # 1. Static checks — no database, no server.
+  # -------------------------------------------------------------------------
+  static:
+    name: Static checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mysqli, gd, mbstring, zlib
+          coverage: none
+          tools: composer:v2
+
+      - name: Check the PHP syntax of every file
+        run: |
+          set -euo pipefail
+          failed=0
+          while IFS= read -r -d '' file; do
+            if ! php -l "$file" > /dev/null; then
+              echo "Syntax error in $file"
+              failed=1
+            fi
+          done < <(find . -name '*.php' -not -path './.git/*' -not -path './.tools/*' -print0)
+          if [ "$failed" -ne 0 ]; then
+            echo "At least one PHP file has a syntax error."
+            exit 1
+          fi
+          echo "Every PHP file parses."
+
+      - name: Check that no forbidden SQL form appears (R-SQL-7, NFR-M-04, AC-42)
+        run: |
+          set -euo pipefail
+          if grep -rInE '\b(INSERT[[:space:]]+IGNORE|UPDATE[[:space:]]+IGNORE)\b' \
+               --include='*.php' --include='*.sql' . ; then
+            echo "A forbidden IGNORE write was found (AC-42)."
+            exit 1
+          fi
+          echo "No INSERT IGNORE or UPDATE IGNORE appears in the code base."
+
+      - name: Check that no credential is committed (D-001, SEC-6)
+        run: |
+          set -euo pipefail
+          if [ -f config/config.local.php ]; then
+            echo "config/config.local.php is tracked. It holds the real credentials (D-001)."
+            exit 1
+          fi
+          if [ -f .env ]; then
+            echo ".env is tracked. It holds the database password (D-001)."
+            exit 1
+          fi
+          echo "No credential file is tracked."
+
+      - name: Check the error-output setting (D-011)
+        run: |
+          set -euo pipefail
+          grep -q "display_errors', '0'" public/index.php \
+            || { echo "public/index.php does not disable display_errors (D-011)."; exit 1; }
+          grep -q "log_errors', '1'" public/index.php \
+            || { echo "public/index.php does not enable log_errors (D-011)."; exit 1; }
+          echo "Errors are kept out of the response body."
+
+      - name: Validate the Phase 6 configuration files
+        run: |
+          set -euo pipefail
+          php tests/phase6_docker_checks.php
+          php tests/phase6_ci_checks.php
+          php tests/phase6_backup_checks.php
+          php tests/phase6_restore_fences.php
+          php tests/phase6_session_checks.php
+          php tests/phase6_load_checks.php
+
+  # -------------------------------------------------------------------------
+  # 2. The Docker build.
+  # -------------------------------------------------------------------------
+  build:
+    name: Docker build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: static
+
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build the image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          push: false
+          load: true
+          tags: greencorner:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Check that the image does not carry a credential
+        run: |
+          set -euo pipefail
+          if docker run --rm --entrypoint sh greencorner:ci -c 'test -f /var/www/config/config.local.php'; then
+            echo "The image contains config/config.local.php (D-001)."
+            exit 1
+          fi
+          echo "The image carries no local configuration file."
+
+  # -------------------------------------------------------------------------
+  # 3. The test suites, driven over HTTP against the container.
+  # -------------------------------------------------------------------------
+  test:
+    name: Test suites
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: build
+
+    services:
+      db:
+        image: mysql:8.0.40
+        env:
+          MYSQL_ROOT_PASSWORD: ci-root-password
+          MYSQL_DATABASE: greencorner
+          MYSQL_USER: greencorner
+          MYSQL_PASSWORD: ci-app-password
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -p$$MYSQL_ROOT_PASSWORD"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=12
+        ports:
+          - 3306:3306
+
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mysqli, gd, mbstring, zlib
+          coverage: none
+
+      - name: Apply the schema
+        env:
+          MYSQL_PWD: ci-root-password
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 30); do
+            if mysqladmin ping -h 127.0.0.1 -uroot --silent; then
+              break
+            fi
+            echo "Waiting for MySQL ($attempt/30)..."
+            sleep 2
+          done
+          mysql -h 127.0.0.1 -uroot < database/schema.sql
+          mysql -h 127.0.0.1 -uroot -e \
+            "GRANT ALL PRIVILEGES ON greencorner.* TO 'greencorner'@'%'; FLUSH PRIVILEGES;"
+          echo "The schema is applied."
+
+      - name: Write the local configuration
+        run: |
+          set -euo pipefail
+          cat > config/config.local.php <<'PHP'
+          <?php
+          // Generated by the CI workflow. Never committed.
+          if (!defined('GREENCORNER_APP')) {
+              http_response_code(403);
+              exit('Forbidden');
+          }
+          define('DB_HOST', '127.0.0.1');
+          define('DB_PORT', 3306);
+          define('DB_NAME', 'greencorner');
+          define('DB_USER', 'greencorner');
+          define('DB_PASS', 'ci-app-password');
+          PHP
+          echo "The local configuration is written."
+
+      - name: Start the application server
+        run: |
+          set -euo pipefail
+          GREEN_CORNER_URL=http://127.0.0.1:8000 \
+            php -S 127.0.0.1:8000 -t public public/router.php > /tmp/server.log 2>&1 &
+          for attempt in $(seq 1 30); do
+            if curl -s -o /dev/null http://127.0.0.1:8000/; then
+              echo "The server is up."
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "The server did not start."
+          cat /tmp/server.log
+          exit 1
+
+      - name: Seed the sample data
+        run: php database/seed.php
+
+      - name: Run the test suites
+        run: |
+          set -euo pipefail
+          php tests/run.php              http://127.0.0.1:8000
+          php tests/phase2_tests.php     http://127.0.0.1:8000
+          php tests/phase3_tests.php     http://127.0.0.1:8000
+          php tests/phase4_tests.php     http://127.0.0.1:8000
+          php tests/phase5_tests.php     http://127.0.0.1:8000
+          php tests/phase6_tests.php     http://127.0.0.1:8000
+
+  # -------------------------------------------------------------------------
+  # 4. The security checks — a job of their own, so they can never be
+  #    hidden by a green test run.
+  # -------------------------------------------------------------------------
+  security:
+    name: Security checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: build
+
+    services:
+      db:
+        image: mysql:8.0.40
+        env:
+          MYSQL_ROOT_PASSWORD: ci-root-password
+          MYSQL_DATABASE: greencorner
+          MYSQL_USER: greencorner
+          MYSQL_PASSWORD: ci-app-password
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -p$$MYSQL_ROOT_PASSWORD"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=12
+        ports:
+          - 3306:3306
+
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mysqli, gd, mbstring, zlib
+          coverage: none
+
+      - name: Apply the schema
+        env:
+          MYSQL_PWD: ci-root-password
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 30); do
+            if mysqladmin ping -h 127.0.0.1 -uroot --silent; then
+              break
+            fi
+            sleep 2
+          done
+          mysql -h 127.0.0.1 -uroot < database/schema.sql
+          mysql -h 127.0.0.1 -uroot -e \
+            "GRANT ALL PRIVILEGES ON greencorner.* TO 'greencorner'@'%'; FLUSH PRIVILEGES;"
+
+      - name: Write the local configuration
+        run: |
+          set -euo pipefail
+          cat > config/config.local.php <<'PHP'
+          <?php
+          if (!defined('GREENCORNER_APP')) {
+              http_response_code(403);
+              exit('Forbidden');
+          }
+          define('DB_HOST', '127.0.0.1');
+          define('DB_PORT', 3306);
+          define('DB_NAME', 'greencorner');
+          define('DB_USER', 'greencorner');
+          define('DB_PASS', 'ci-app-password');
+          PHP
+
+      - name: Start the application server
+        run: |
+          set -euo pipefail
+          GREEN_CORNER_URL=http://127.0.0.1:8000 \
+            php -S 127.0.0.1:8000 -t public public/router.php > /tmp/server.log 2>&1 &
+          for attempt in $(seq 1 30); do
+            if curl -s -o /dev/null http://127.0.0.1:8000/; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat /tmp/server.log
+          exit 1
+
+      - name: Seed the sample data
+        run: php database/seed.php
+
+      - name: Run the security checks
+        run: php tests/security_checks.php http://127.0.0.1:8000

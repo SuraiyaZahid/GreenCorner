@@ -1,0 +1,34 @@
+# GreenCorner — Git ignore rules
+#
+# Local configuration and real credentials must never reach version control
+# (decision D-001, see config/DECISIONS.md).
+
+# The local configuration file holds the real database credentials.
+config/config.local.php
+
+# Local overrides of any other configuration file.
+config/*.local.php
+
+# Uploaded product images are user content, not source code.
+storage/uploads/*
+!storage/uploads/.gitkeep
+
+# Local backups and generated logs are operational data.
+storage/backups/
+storage/logs/*
+!storage/logs/.htaccess
+
+# Local development tooling (PHP, MySQL, configuration).
+.tools/
+.puku-cli/settings.local.json
+
+# Editor and OS noise.
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
+
+# Logs and temporary files.
+*.log
+*.tmp

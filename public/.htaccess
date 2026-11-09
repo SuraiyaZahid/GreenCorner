@@ -1,0 +1,44 @@
+# GreenCorner — public/.htaccess
+#
+# Routes every request to the front controller (public/index.php), which is
+# the single entry point for the MVC application (SRS §4.1).
+#
+# The uploaded product images live OUTSIDE the web root, in storage/uploads.
+# A request for /uploads/<file> is therefore routed to the front controller
+# and answered by UploadController, which serves the file with an image
+# content type. An uploaded file can never be executed as code, whatever it
+# contains (SEC-6).
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Handle the Authorization header for CGI/FastCGI setups.
+    RewriteCond %{HTTP:Authorization} .
+    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+    # The upload path always goes to the front controller, even if a
+    # directory of that name exists in the web root.
+    RewriteRule ^uploads/ index.php [L]
+
+    # If the request maps to an existing file or directory, serve it directly.
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^ index.php [L]
+</IfModule>
+
+# Never serve the contents of an uploaded file as executable content.
+<IfModule mod_headers.c>
+    <FilesMatch "\.(php|phtml|phar|pl|py|cgi|asp|aspx|sh)$">
+        Require all denied
+    </FilesMatch>
+</IfModule>
+
+# Do not advertise the PHP version.
+<IfModule mod_php.c>
+    php_flag expose_php off
+</IfModule>
+
+# Block access to dot files (e.g. .env, .git).
+<FilesMatch "^\.">
+    Require all denied
+</FilesMatch>

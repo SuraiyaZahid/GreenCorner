@@ -1,0 +1,10 @@
+# GreenCorner — project root .htaccess
+#
+# The project root is NOT the web root. The document root must point at
+# public/, so that config/, controllers/, models/, helpers/, views/, database/
+# and storage/ are unreachable from the browser (SEC-6).
+#
+# This file exists so that a misconfigured document root still refuses to
+# serve application source files.
+
+Require all denied

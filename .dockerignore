@@ -1,0 +1,54 @@
+# GreenCorner — Docker build context exclusions
+#
+# These files are excluded from the image so that the build is small, the
+# image carries no secrets, and no development artefact ends up in
+# production.
+
+# --- Secrets ---------------------------------------------------------------
+# The real credentials must never enter an image (decision D-001).
+config/config.local.php
+.env
+.env.*
+!.env.example
+
+# --- Version control -------------------------------------------------------
+.git
+.gitignore
+.github
+
+# --- Development artefacts -------------------------------------------------
+.tools
+/storage/logs/*
+!/storage/logs/.htaccess
+/storage/uploads/*
+!/storage/uploads/.htaccess
+
+# --- Tests -----------------------------------------------------------------
+# The test suites are run against a live server, not inside the image.
+tests/
+
+# --- Documentation ---------------------------------------------------------
+# The README and the requirements documents are not needed at runtime.
+README.md
+GreenCorner_PRD.md
+GreenCorner_SRS.md
+GreenCorner_Requirement_Traceability_Matrix.md
+
+# --- Docker's own files ----------------------------------------------------
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# --- Backups ---------------------------------------------------------------
+# A backup must never be copied into an image.
+backups/
+*.sql
+*.sql.gz
+*.sql.gz.age
+
+# --- Editor and OS noise ---------------------------------------------------
+.vscode
+.idea
+Thumbs.db
+.DS_Store
+*.swp

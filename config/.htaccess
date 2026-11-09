@@ -1,0 +1,23 @@
+# GreenCorner — config/.htaccess
+#
+# The config/ directory sits outside the web root, so this file is a second
+# line of defence: if the document root is ever misconfigured and points at
+# the project root instead of public/, no configuration file may be served
+# over HTTP.
+#
+# In particular config/config.local.php holds the real database credentials
+# and must never be readable through a browser (SEC-6, decision D-001).
+
+# Deny every request to this directory.
+Require all denied
+
+# Belt and braces: deny the configuration files by name as well, in case the
+# rule above is not honoured by the web server in use.
+<FilesMatch "\.(php|inc|ini|env|json|yml|yaml)$">
+    Require all denied
+</FilesMatch>
+
+# Never execute anything in this directory, even if it were reachable.
+<IfModule mod_php.c>
+    php_flag engine off
+</IfModule>

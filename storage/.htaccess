@@ -1,0 +1,4 @@
+# GreenCorner — storage/.htaccess
+# The storage directory holds uploaded product images and login-attempt
+# counters. It lives outside the web root, so it is never served directly.
+Require all denied

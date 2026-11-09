@@ -1,0 +1,117 @@
+# GreenCorner — Docker Compose
+#
+# Brings up the whole application: the web server and the database.
+#
+#   docker compose up -d --build
+#
+# The application is then at http://127.0.0.1:8080.
+#
+# WHAT IS PINNED, AND WHY
+#
+#   mysql:8.0.40   MySQL 8.0.16 or later is MANDATORY (SRS SC-2). CHECK
+#                  constraints are only ENFORCED from 8.0.16; before that they
+#                  are parsed and ignored, so the payment shape, the cart and
+#                  the order-item quantity constraints would not be applied.
+#                  The patch version is pinned so the build is reproducible.
+#
+#   php:8.3-apache  See the Dockerfile for why mod_php is used rather than
+#                  PHP-FPM (decision D-020).
+#
+# SECRETS
+#
+#   The database password is NEVER written into this file. It is read from the
+#   host environment, so no credential reaches version control (decision
+#   D-001). The tracked config/config.php carries no password at all: a
+#   missing credential is a fatal error with a clear message, never a silent
+#   fallback.
+#
+#   Copy .env.example to .env, put the password there, and keep .env out of
+#   version control.
+
+services:
+  db:
+    image: mysql:8.0.40
+    container_name: greencorner-db
+    restart: unless-stopped
+    command:
+      # STRICT_TRANS_TABLES is REQUIRED. The application verifies it on every
+      # connection and refuses to start without it (R-SQL-1, R-SQL-2, R-SQL-3,
+      # AC-41). The rest of the mode matches DB_SESSION_SQL_MODE in
+      # config/config.php.
+      - --sql-mode=STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION,NO_ZERO_DATE,NO_ZERO_IN_DATE
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    environment:
+      MYSQL_DATABASE: ${DB_NAME:-greencorner}
+      MYSQL_USER: ${DB_USER:-greencorner}
+      MYSQL_PASSWORD: ${DB_PASS:?DB_PASS must be set. Copy .env.example to .env.}
+      MYSQL_RANDOM_ROOT_PASSWORD: "yes"
+    volumes:
+      # The database data lives on a named volume, so it survives a container
+      # restart and is never part of the image.
+      - db-data:/var/lib/mysql
+      # The schema is applied only when the data volume is empty, so it is
+      # mounted read-only into the initialisation directory.
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    healthcheck:
+      # The healthcheck waits for MySQL to accept connections, so the
+      # application never starts against a database that is not ready.
+      #
+      # The password is passed through MYSQL_PWD, which the MySQL client
+      # reads from the environment. It is deliberately NOT passed with
+      # "-p<value>": that form puts the secret in the process arguments,
+      # where it is visible in the container's process listing and in
+      # "docker inspect" (decision D-001).
+      #
+      # CMD-SHELL is required: CMD runs the arguments directly with no
+      # shell, so $MYSQL_PASSWORD could never be expanded. The "$$" is
+      # Compose's escape for a literal "$", so the container's own shell
+      # performs the expansion at run time. The db service's environment
+      # carries MYSQL_PASSWORD, not DB_PASS; both come from the same
+      # ${DB_PASS:?...} source, so the value is identical.
+      #
+      # This is the same mechanism database/backup.php and
+      # database/restore.php already use for mysqldump.
+      test: ["CMD-SHELL", "MYSQL_PWD=\"$$MYSQL_PASSWORD\" mysqladmin ping -h 127.0.0.1 --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+    # The database is NOT published to the host by default. Publishing it
+    # would expose it to the network. Uncomment only for local debugging.
+    # ports:
+    #   - "127.0.0.1:3306:3306"
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: greencorner:latest
+    container_name: greencorner-app
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      APP_ENV: ${APP_ENV:-production}
+      GREEN_CORNER_URL: ${GREEN_CORNER_URL:-http://127.0.0.1:8080}
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_NAME: ${DB_NAME:-greencorner}
+      DB_USER: ${DB_USER:-greencorner}
+      DB_PASS: ${DB_PASS:?DB_PASS must be set. Copy .env.example to .env.}
+    volumes:
+      # The uploaded product images and the operational logs are on named
+      # volumes, so they survive a restart and are never part of the image.
+      - uploads-data:/var/www/storage/uploads
+      - logs-data:/var/www/storage/logs
+    ports:
+      # Bound to the loopback interface: the application is reachable from
+      # this machine only. In front of it there would be a reverse proxy
+      # terminating TLS.
+      - "127.0.0.1:8080:80"
+
+volumes:
+  db-data:
+  uploads-data:
+  logs-data:
