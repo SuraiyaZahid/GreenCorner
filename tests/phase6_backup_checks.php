@@ -61,8 +61,17 @@ $runner->test('The dump excludes the two tables', function () {
 $runner->test('The password is never passed on the command line (D-001)', function () {
     $command = backup_mysqldump_command('greencorner', '/tmp/out.sql');
 
-    assert_not_contains(DB_PASS, $command, 'The password must not appear in the command line');
+    // The structural property: mysqldump is never given a password
+    // argument. This holds on any machine, with or without credentials.
     assert_not_contains('--password=', $command);
+
+    // When this installation HAS a password, the command must not carry
+    // that password either. The check is skipped when there is no local
+    // configuration, because there is then no password to leak - the
+    // command is built from the environment, not from a literal.
+    if (defined('DB_PASS') && DB_PASS !== '') {
+        assert_not_contains(DB_PASS, $command, 'The password must not appear in the command line');
+    }
 });
 
 $runner->group('2. The protection of the backup');

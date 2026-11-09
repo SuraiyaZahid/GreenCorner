@@ -17,11 +17,19 @@
  *   config/bootstrap.php       The entry point every caller uses. It defines
  *                              the access guard and loads this file.
  *
- * The local file is REQUIRED. The tracked file carries no password, so
- * there is nothing to fall back on: if config/config.local.php is missing,
- * or a required credential is empty, this loader stops with one clear error
- * that names the missing key and the file to create. It never falls back to
- * an empty or guessed value.
+ * The local file is REQUIRED before the application can reach the database.
+ * The tracked file carries no password, so there is nothing to fall back on:
+ * if config/config.local.php is missing, or a required credential is empty,
+ * the connection is refused with one clear error that names the missing key
+ * and the file to create. It never falls back to an empty or guessed value.
+ *
+ * The requirement is enforced by helpers/db.php at the moment the connection
+ * is opened, not by this loader. This loader only DEFINES the settings, so
+ * that a file which merely reads the configuration - a static check, a
+ * documentation generator - can load it on a machine that has no
+ * credentials for this installation. The static check suite runs in CI
+ * against a fresh checkout, where config/config.local.php deliberately does
+ * not exist, and those checks never open a connection.
  *
  * Implements decision D-001 (see config/DECISIONS.md).
  */
@@ -54,8 +62,8 @@ if (!is_file($defaultConfigFile)) {
     );
 }
 
-// The local file carries the real credentials and is REQUIRED. The tracked
-// file has no password default, so there is nothing to fall back on.
+// The local file carries the real credentials. The tracked file has no
+// password default, so there is nothing to fall back on.
 //
 // The local override is loaded FIRST, so that the constants it defines are
 // the ones that survive: config/config.php only defines a constant when it
@@ -64,20 +72,17 @@ if (!is_file($defaultConfigFile)) {
 // The local file may redefine any constant. Each constant is guarded so an
 // undefined one does not raise a PHP warning, which would otherwise be
 // written into the response body and corrupt the HTTP status code.
-if (!is_file($localConfigFile)) {
-    throw new RuntimeException(
-        "GreenCorner configuration error: the file config/config.local.php is missing.\n"
-        . "\n"
-        . "It holds the database credentials for this installation and is not\n"
-        . "tracked in version control. Create it from the example:\n"
-        . "\n"
-        . '    copy config/config.example.php config/config.local.php' . "\n"
-        . "\n"
-        . "Then fill in the database details in config/config.local.php.\n"
-    );
+//
+// The file is loaded when it exists. When it does NOT exist, the tracked
+// defaults are still loaded, so that the non-secret settings are available.
+// The credential requirement is NOT dropped: helpers/db.php refuses to open
+// a connection without DB_PASS, and says exactly which file to create. That
+// way a static check can read the configuration on a machine that has no
+// credentials for this installation, while the application still refuses to
+// talk to the database without them.
+if (is_file($localConfigFile)) {
+    require_once $localConfigFile;
 }
-
-require_once $localConfigFile;
 
 require_once $defaultConfigFile;
 
@@ -87,13 +92,18 @@ require_once $defaultConfigFile;
  *
  * Each entry lists the constants that satisfy it. The first constant that is
  * defined and non-empty satisfies the requirement.
+ *
+ * This is a constant rather than a local variable because the check below
+ * runs from a function, which cannot see the enclosing scope.
  */
-$requiredSettings = array(
-    'DB_HOST' => array('DB_HOST'),
-    'DB_NAME' => array('DB_NAME'),
-    'DB_USER' => array('DB_USER'),
-    'DB_PASS' => array('DB_PASS'),
-);
+if (!defined('GREEN_CORNER_REQUIRED_DB_SETTINGS')) {
+    define('GREEN_CORNER_REQUIRED_DB_SETTINGS', array(
+        'DB_HOST' => array('DB_HOST'),
+        'DB_NAME' => array('DB_NAME'),
+        'DB_USER' => array('DB_USER'),
+        'DB_PASS' => array('DB_PASS'),
+    ));
+}
 
 /**
  * The name of a setting that is missing, or null when every setting is
@@ -122,11 +132,28 @@ function green_corner_missing_setting(array $requirements): ?string
     return null;
 }
 
-$missingSetting = green_corner_missing_setting($requiredSettings);
+/**
+ * Refuse to go on when a database setting is missing.
+ *
+ * This is called by helpers/db.php at the moment the connection is opened,
+ * so that the requirement is enforced exactly where the credentials are
+ * used. The application still never connects with a missing or empty
+ * password: it stops here instead (decision D-001).
+ *
+ * The message tells the developer exactly what to do. It names the setting
+ * and the file to create, and it never contains a credential.
+ *
+ * @throws RuntimeException if a setting is missing or empty.
+ * @return void
+ */
+function green_corner_require_database_settings(): void
+{
+    $missingSetting = green_corner_missing_setting(GREEN_CORNER_REQUIRED_DB_SETTINGS);
 
-if ($missingSetting !== null) {
-    // The message tells the developer exactly what to do. It names the
-    // setting and the file to create, and it never contains a credential.
+    if ($missingSetting === null) {
+        return;
+    }
+
     $message = "GreenCorner configuration error: the setting {$missingSetting} is missing or empty.\n"
         . "\n"
         . "Create the local configuration file and fill it in:\n"

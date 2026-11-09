@@ -291,8 +291,16 @@ $runner->test('A configuration file refuses to run when reached directly', funct
 });
 
 $runner->test('The configuration loader reports a missing credential clearly', function () {
-    // A copy of the loader without any database defaults: the loader must
-    // stop with one clear message naming the missing setting.
+    // The requirement is enforced where the credentials are used, at the
+    // moment the connection is opened. A copy of the loader, with no
+    // database defaults and no credentials, must therefore refuse to
+    // connect and must say exactly which setting is missing.
+    //
+    // The loader itself still defines the settings; what it no longer does
+    // is refuse to be READ by a file that never connects. The static check
+    // suite depends on that: it runs in CI against a checkout that has no
+    // config/config.local.php, because that file holds a real credential and
+    // is deliberately not tracked (D-001).
     $temporaryDirectory = sys_get_temp_dir() . '/greencorner_config_test';
     @mkdir($temporaryDirectory, 0777, true);
 
@@ -307,6 +315,7 @@ $runner->test('The configuration loader reports a missing credential clearly', f
         . "define('GREENCORNER_APP', true);\n"
         . "try {\n"
         . "    require " . var_export($temporaryDirectory . '/database.php', true) . ";\n"
+        . "    green_corner_require_database_settings();\n"
         . "    echo 'LOADED';\n"
         . "} catch (Throwable \$e) {\n"
         . "    echo \$e->getMessage();\n"
@@ -324,16 +333,22 @@ $runner->test('The configuration loader reports a missing credential clearly', f
 
     $output = (string) $output;
 
-    assert_not_contains('LOADED', $output, 'The loader accepted a configuration with no credentials');
-    assert_contains('configuration error', $output, 'The loader did not report a configuration error');
+    assert_not_contains('LOADED', $output, 'The application accepted a configuration with no credentials');
+    assert_contains('configuration error', $output, 'The application did not report a configuration error');
     assert_contains('DB_HOST', $output, 'The error did not name the missing setting');
     assert_contains('config.local.php', $output, 'The error did not say which file to create');
 });
 
-$runner->test('A missing local configuration file is a fatal error (D-001)', function () {
+$runner->test('A missing local configuration file stops the application (D-001)', function () {
     // The tracked config.php carries no password, so without the local file
-    // there is nothing to fall back on and the application must refuse to
-    // start with a clear message.
+    // there is nothing to fall back on. The application must refuse to reach
+    // the database and must say which file to create.
+    //
+    // The requirement is enforced at the connection, not when the
+    // configuration is read, so that a file which only READS the
+    // configuration - a static check, or a documentation generator - can
+    // load it without the credentials of this installation being present.
+    // The application itself still never connects without them.
     $temporaryDirectory = sys_get_temp_dir() . '/greencorner_config_test';
     @mkdir($temporaryDirectory, 0777, true);
 
@@ -347,6 +362,7 @@ $runner->test('A missing local configuration file is a fatal error (D-001)', fun
         . "define('GREENCORNER_APP', true);\n"
         . "try {\n"
         . "    require " . var_export($temporaryDirectory . '/database.php', true) . ";\n"
+        . "    green_corner_require_database_settings();\n"
         . "    echo 'LOADED';\n"
         . "} catch (Throwable \$e) {\n"
         . "    echo \$e->getMessage();\n"
@@ -363,9 +379,47 @@ $runner->test('A missing local configuration file is a fatal error (D-001)', fun
 
     $output = (string) $output;
 
-    assert_not_contains('LOADED', $output, 'The application started without config/config.local.php');
-    assert_contains('configuration error', $output, 'The loader did not report a configuration error');
+    assert_not_contains('LOADED', $output, 'The application reached the database without config/config.local.php');
+    assert_contains('configuration error', $output, 'The application did not report a configuration error');
     assert_contains('config/config.local.php', $output, 'The error did not name the missing file');
+});
+
+$runner->test('The configuration loader can be read without credentials (D-001)', function () {
+    // Reading the configuration must not require the credential file, so
+    // that the static check suite can run against a checkout that has no
+    // secret in it. The requirement is enforced at the connection instead,
+    // and the two checks above prove that it still holds.
+    $temporaryDirectory = sys_get_temp_dir() . '/greencorner_config_test';
+    @mkdir($temporaryDirectory, 0777, true);
+
+    $loader = file_get_contents(__DIR__ . '/../config/database.php');
+    $trackedConfig = file_get_contents(__DIR__ . '/../config/config.php');
+
+    file_put_contents($temporaryDirectory . '/database.php', $loader);
+    file_put_contents($temporaryDirectory . '/config.php', $trackedConfig);
+
+    $script = "<?php\n"
+        . "define('GREENCORNER_APP', true);\n"
+        . "try {\n"
+        . "    require " . var_export($temporaryDirectory . '/database.php', true) . ";\n"
+        . "    echo 'LOADED';\n"
+        . "} catch (Throwable \$e) {\n"
+        . "    echo 'ERROR: ' . \$e->getMessage();\n"
+        . "}\n";
+
+    file_put_contents($temporaryDirectory . '/run.php', $script);
+
+    $output = shell_exec(escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg($temporaryDirectory . '/run.php') . ' 2>&1');
+
+    @unlink($temporaryDirectory . '/run.php');
+    @unlink($temporaryDirectory . '/database.php');
+    @unlink($temporaryDirectory . '/config.php');
+    @rmdir($temporaryDirectory);
+
+    $output = (string) $output;
+
+    assert_contains('LOADED', $output, 'The configuration could not be read without a credential file');
+    assert_not_contains('ERROR:', $output, 'Reading the configuration raised an error');
 });
 
 $runner->test('The tracked configuration carries no database password (D-001)', function () {

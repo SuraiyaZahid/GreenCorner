@@ -77,6 +77,14 @@ function db()
         throw new RuntimeException('Database connection failed: injected outage');
     }
 
+    // Every database setting must be present before the connection is opened.
+    // The check lives here, at the point where the credentials are actually
+    // used, so that a file which merely READS the configuration - a static
+    // check, for example - can load it without the credentials of this
+    // installation being present. The application itself never connects
+    // without them: it stops here (decision D-001).
+    green_corner_require_database_settings();
+
     $mysqli = @new mysqli(
         DB_HOST,
         DB_USER,
